@@ -9,21 +9,36 @@ namespace BoxField
 {
     class Box
     {
-        public Color colour;
+        public Color color;
         public int x, y, size;
 
-        public Box (int _x, int _y, int _size)
+        public Box (int _x, int _y, int _size, Color  _color)
         {
 
             x = _x;
             y = _y;
             size = _size;
+            color = _color;
 
         }
 
         public void Move(int speed)
         {
             y += speed;
+        }
+
+        public void Move(int speed, Boolean direction)
+        {
+
+            //true = right
+            if (direction)
+            {
+                x += speed;
+            }
+            else
+            {
+                x -= speed;
+            }
         }
 
     }

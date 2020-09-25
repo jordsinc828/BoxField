@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace BoxField
@@ -18,20 +13,81 @@ namespace BoxField
         //used to draw boxes on screen
 
 
-        SolidBrush boxBrush = new SolidBrush(Color.White);
+        SolidBrush boxBrush = new SolidBrush(Color.Red);
+        SolidBrush heroBrush = new SolidBrush(Color.White);
 
         // create a list to hold a column of boxes        
 
         List<Box> boxes = new List<Box>();
+        int leftX = 200;
+        int gap = 200;
+        Boolean moveRight = true;
+        string patternDirection = "right";
+        int patternLength = 10;
+        int patternSpeed = 7;
 
         Box hero;
         int heroSpeed = 10;
         int heroSize = 30;
 
+        int gameScore = 0;
+    
+
+
+        Random randNum = new Random();
+        Random randSpeed = new Random();
+        Color c = Color.Red;
+
         public GameScreen()
         {
             InitializeComponent();
             OnStart();
+        }
+        public void MakeBox()
+        {
+            int rand = randNum.Next(1, 4);
+
+            //gets color for boxes
+
+            if (rand == 1)
+            {
+                c = Color.Red;
+            }
+            else if (rand == 2)
+            {
+                c = Color.Yellow;
+            }
+            else if (rand == 3)
+            {
+                c = Color.Orange;
+            }
+
+            if (boxes[boxes.Count - 1].y > 21)
+            {
+                patternLength--;
+
+                if (patternLength == 0)
+                {
+                    moveRight = !moveRight;
+                    patternLength = randNum.Next(1, 20);
+                }
+
+                patternSpeed = randSpeed.Next(7, 35);
+
+                if (moveRight == true)
+                {
+                    leftX += patternSpeed;
+                }
+                else
+                {
+                    leftX -= patternSpeed;
+                }
+                Box newBox1 = new Box(leftX, 0, 20, c);
+                boxes.Add(newBox1);
+
+                Box newBox2 = new Box(leftX + gap, 0, 20, c);
+                boxes.Add(newBox2);
+            }
         }
 
         /// <summary>
@@ -39,12 +95,16 @@ namespace BoxField
         /// </summary>
         public void OnStart()
         {
-            //TODO - set game start values
+            // set game start values
 
-            Box newBox = new Box(this.Width/2 - 300 - 30, 0, 20);
-            boxes.Add(newBox);
+            Box newBox1 = new Box(this.Width / 2 - 300 - 30, 0, 20, c);
+            boxes.Add(newBox1);
+            Box newBox2 = new Box(this.Width / 2 + 300 - 20, 0, 20, c);
+            boxes.Add(newBox2);
 
-            hero = new Box(this.Width / 2 - heroSize / 2, 370, heroSize);
+            MakeBox();
+
+            hero = new Box(this.Width / 2 - heroSize / 2, 370, heroSize, c);
         }
 
         private void GameScreen_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
@@ -77,7 +137,39 @@ namespace BoxField
 
         private void gameLoop_Tick(object sender, EventArgs e)
         {
-            //TODO - update location of all boxes (drop down screen)
+            gameScore++;
+            scoreLabel.Text = "" + gameScore;
+
+            // check for collisions
+
+            Rectangle heroRec = new Rectangle(hero.x, hero.y, hero.size, hero.size);
+
+            if (boxes.Count >= 6)
+            {
+
+                // 0-3
+                for (int i = 0; i < 6; i++)
+                {
+                    Rectangle boxRec = new Rectangle(boxes[i].x, boxes[i].y, boxes[i].size, boxes[i].size);
+
+                    if (boxRec.IntersectsWith(heroRec))
+                    {
+                        gameLoop.Enabled = false;
+                    }
+                }
+            }
+            // move player
+
+            if (leftArrowDown == true)
+            {
+                hero.Move(heroSpeed, false);
+            }
+            else if (rightArrowDown == true)
+            {
+                hero.Move(heroSpeed, true);
+            }
+
+            // update location of all boxes (drop down screen)
 
             foreach (Box b in boxes)
             {
@@ -93,15 +185,7 @@ namespace BoxField
 
             // add new box if it is time
 
-            if (boxes[boxes.Count - 1].y > 21)
-            {
-                Box newBox1 = new Box(this.Width/2 - 300 - 30, 0, 20);
-                boxes.Add(newBox1);
-                Box newBox2 = new Box(this.Width / 2 + 300 - 20, 0, 20);
-                boxes.Add(newBox2);
-            }
-           
-
+            MakeBox();
             Refresh();
         }
 
@@ -111,11 +195,12 @@ namespace BoxField
 
             foreach  (Box b in boxes)
             {
+                boxBrush.Color = b.color;
                 e.Graphics.FillRectangle(boxBrush, b.x, b.y, b.size, b.size);
-                e.Graphics.FillRectangle(boxBrush, 0, 400, this.Width, 2);
+                e.Graphics.FillRectangle(heroBrush, 0, 400, this.Width, 2);
 
                 // draw hero
-                e.Graphics.FillRectangle(boxBrush, hero.x, hero.y, hero.size, hero.size);
+                e.Graphics.FillRectangle(heroBrush, hero.x, hero.y, hero.size, hero.size);
             }
 
         }
